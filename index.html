@@ -1,0 +1,794 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BCTC — 50 English Grammar Test Game</title>
+
+<!-- Inline manifest (data URI) -->
+<link rel="manifest" id="manifest-link">
+<script>
+  const manifest = {
+    name: "BCTC English Grammar Test Game",
+    short_name: "BCTC Test",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#0f172a",
+    theme_color: "#0ea5e9",
+    description: "50 MCQ English grammar test for BCTC students with Bengali explanations and offline support.",
+    icons: []
+  };
+  document.getElementById('manifest-link').setAttribute('href', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
+</script>
+
+<style>
+  :root{
+    --bg1:#0f172a; --bg2:#0ea5e9; --card:#ffffff;
+    --accent:#0ea5e9; --accent-dark:#0369a1; --muted:#6b7280;
+    --success:#16a34a; --danger:#dc2626;
+    --maxw:980px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+    color: #0b1220;
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    /* colorful gradient background */
+    background: radial-gradient(1200px 600px at 10% 10%, rgba(14,165,233,0.12), transparent 10%),
+                radial-gradient(900px 400px at 90% 90%, rgba(99,102,241,0.12), transparent 12%),
+                linear-gradient(135deg, #fdfcfe 0%, #eaf8ff 25%, #fff7fb 50%, #f7fff1 75%, #fffef5 100%);
+  }
+
+  .app{
+    width:100%;
+    max-width:var(--maxw);
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.88));
+    border-radius:14px;
+    box-shadow: 0 10px 40px rgba(2,6,23,0.12);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  header{
+    padding:18px 20px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .brand{
+    display:flex;
+    flex-direction:column;
+  }
+  .brand .title{
+    font-size:34px; /* BCTC larger */
+    font-weight:800;
+    letter-spacing:0.6px;
+    line-height:1;
+  }
+  .brand .subtitle{
+    font-size:14px;
+    opacity:0.95;
+    margin-top:6px;
+  }
+  .top-right{
+    text-align:right;
+    font-size:13px;
+    opacity:0.95;
+  }
+  main{padding:18px; display:block;}
+
+  .grid{
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+    justify-content:space-between;
+  }
+  @media (max-width:900px){ .grid{flex-direction:column} }
+
+  .card{
+    background:var(--card);
+    border-radius:10px;
+    padding:14px;
+    box-shadow: 0 6px 18px rgba(10,20,40,0.04);
+  }
+
+  /* left column (main quiz) */
+  .left{flex:1; min-width:0}
+
+  .start-form label{display:block;font-weight:700;margin:8px 0 6px}
+  .start-form input[type="text"]{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid #e6eefc;
+    font-size:15px;
+  }
+  .btn{
+    display:inline-block;
+    background:var(--accent);
+    color:white;
+    border:none;
+    padding:10px 14px;
+    border-radius:10px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 8px 22px rgba(14,165,233,0.18);
+    margin-top:10px;
+  }
+  .btn.ghost{background:transparent;color:var(--accent);box-shadow:none;border:1px solid rgba(14,165,233,0.12)}
+  .small{font-size:13px;color:var(--muted)}
+
+  .question-area{
+    display:none;
+    flex-direction:column;
+  }
+
+  .qmeta{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap;
+  }
+  .qnum{font-weight:800}
+  .score-badge{background:rgba(6,95,70,0.08);padding:6px 10px;border-radius:999px;font-weight:700;color:var(--muted)}
+
+  .progress-outer{height:12px;background:#eef2ff;border-radius:999px;overflow:hidden;flex:1;margin-left:12px}
+  .progress-inner{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-dark));width:0%}
+
+  .qbox{margin-top:8px;padding:14px;border-radius:10px;border:1px solid #eef6ff;background:linear-gradient(180deg,#fff,#fbfeff)}
+  .qtext{font-size:18px;font-weight:700;margin-bottom:12px}
+  .choices{display:flex;flex-direction:column;gap:10px}
+  .choice{
+    display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid #e6eefc;cursor:pointer;background:white;
+    transition:all .12s;
+  }
+  .choice:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(14,165,233,0.06)}
+  .choice input{transform:scale(1.05)}
+  .explain{
+    margin-top:12px;padding:12px;border-radius:8px;color:white;display:none;
+  }
+  .explain.wrong{background:linear-gradient(90deg,var(--danger),#b91c1c)}
+  .explain.correct{background:linear-gradient(90deg,var(--success),#15803d)}
+
+  .controls{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  .muted{color:var(--muted);font-size:13px}
+
+  /* right column (info) */
+  .right{width:280px}
+  @media (max-width:900px){ .right{width:100%} }
+
+  .summary-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #f1f5f9}
+  .final-screen{display:none;text-align:center}
+
+  /* footer credits */
+  .credits{margin-top:12px;font-size:13px;color:var(--muted);text-align:center}
+
+  /* responsive tweaks */
+  @media (max-width:520px){
+    .brand .title{font-size:28px}
+    .qtext{font-size:16px}
+    .btn{width:100%}
+    .controls{flex-direction:column;align-items:stretch}
+  }
+</style>
+</head>
+<body>
+  <div class="app" role="application" aria-labelledby="appTitle">
+    <header>
+      <div class="brand">
+        <div id="appTitle" class="title">BCTC</div>
+        <div class="subtitle">50 English Grammar Test Game</div>
+      </div>
+      <div class="top-right">
+        <div style="font-weight:700">Brajadham Computer Tutorial Centre</div>
+        <div style="font-style:italic;margin-top:6px">*Created by Abhijit Chakraborty</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="grid" style="align-items:flex-start">
+        <div class="left card">
+          <!-- Start screen -->
+          <div id="startScreen">
+            <h2 style="margin:0 0 6px">Welcome — BCTC Grammar Test</h2>
+            <p class="small">Fill in student details to begin. Works offline after first load.</p>
+
+            <div class="start-form" style="margin-top:12px">
+              <label for="firstName">First name</label>
+              <input id="firstName" type="text" placeholder="e.g., Rahul" autocomplete="given-name">
+              <label for="lastName">Surname</label>
+              <input id="lastName" type="text" placeholder="e.g., Chakraborty" autocomplete="family-name">
+
+              <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
+                <button class="btn" id="btnStart">Start Test</button>
+                <button class="btn ghost" id="btnInstructions">Instructions</button>
+              </div>
+
+              <div id="instructions" style="display:none;margin-top:12px">
+                <div class="small">
+                  • 50 multiple-choice questions. Each correct = 2 points (total 100).<br>
+                  • Select an option → press <strong>Submit</strong> to check the answer. Explanation in Bengali will appear only if your answer is wrong.<br>
+                  • After viewing the result press <strong>Next Question</strong> to continue. No auto-advance.<br>
+                  • At the end you'll get a personalized result with your name & surname.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quiz area -->
+          <div id="quizArea" class="question-area">
+            <div class="qmeta">
+              <div>
+                <div class="qnum" id="qNum">Question 1 of 50</div>
+                <div class="muted" id="qSub">Select the best answer and press Submit</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="score-badge" id="scoreBadge">Score: 0</div>
+                <div style="display:flex;align-items:center;min-width:160px">
+                  <div class="muted" style="font-size:13px">Progress</div>
+                  <div class="progress-outer" aria-hidden="true">
+                    <div class="progress-inner" id="progressInner" style="width:0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="qbox" role="group" aria-labelledby="qNum">
+              <div class="qtext" id="qText">Question text...</div>
+              <div class="choices" id="choices">
+                <!-- choices injected here -->
+              </div>
+
+              <div id="explainMsg" class="explain" role="status" aria-live="polite"></div>
+
+              <div class="controls">
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn" id="btnSubmit" disabled>Submit</button>
+                  <button class="btn ghost" id="btnNext" style="display:none">Next Question</button>
+                </div>
+                <div style="margin-left:auto" class="small muted" id="timerHint"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <aside class="right card">
+          <div style="font-weight:800;margin-bottom:8px">Test Summary</div>
+          <div class="summary-item"><div>Student</div><div id="studentName" class="small muted">—</div></div>
+          <div class="summary-item"><div>Questions</div><div class="small muted">50</div></div>
+          <div class="summary-item"><div>Points / Question</div><div class="small muted">2</div></div>
+          <div class="summary-item"><div>Max Score</div><div class="small muted">100</div></div>
+
+          <div style="margin-top:12px">
+            <button class="btn" id="btnDownload" style="width:100%">Download CSV</button>
+            <button class="btn ghost" id="btnRestart" style="width:100%;margin-top:8px">Restart</button>
+          </div>
+
+          <div class="credits">
+            <div style="font-weight:700;margin-top:14px">BCTC</div>
+            <div class="small muted">Brajadham Computer Tutorial Centre</div>
+            <div style="margin-top:8px;font-style:italic;font-size:13px">Created by Abhijit Chakraborty</div>
+          </div>
+
+          <div class="final-screen" id="finalScreen">
+            <h3 id="finalGreeting"></h3>
+            <div style="font-size:28px;font-weight:800" id="finalScore">0 / 100</div>
+            <div class="small muted" id="finalRemark" style="margin-top:8px"></div>
+            <div style="margin-top:10px">
+              <button class="btn" id="btnBackToStart" style="width:100%">Back to Start</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+<script>
+/* -------------------------
+   Questions array (50 MCQs)
+   Each: {q, choices[], correct (index), explanation_bn}
+   ------------------------- */
+const questions = [
+  { q: "1. Choose the correct past tense form: 'She ____ to the market yesterday.'",
+    choices: ["goes","went","gone","going"], correct:1,
+    explanation_bn: "সঠিক ক্রিয়া হচ্ছে 'went' কারণ বাক্যটি অতীতকাল নির্দেশ করে — 'yesterday' আছে।" },
+
+  { q: "2. Which is correct? 'He ____ his homework every day.'",
+    choices: ["do","does","did","doing"], correct:1,
+    explanation_bn: "Subject 'He' (third person singular) হলে present simple এ 'does' ব্যবহার করতে হয়।" },
+
+  { q: "3. Pick the sentence with the correct article: 'I saw ____ elephant at the zoo.'",
+    choices: ["a","an","the","ø"], correct:1,
+    explanation_bn: "'elephant' স্বরধ্বনি দিয়ে শুরু; তাই 'an' ব্যবহার হবে।" },
+
+  { q: "4. Choose correct preposition: 'We arrived ____ the station at 5 pm.'",
+    choices: ["in","on","at","to"], correct:2,
+    explanation_bn: "'at the station' হলো সঠিক — নির্দিষ্ট স্থান/সময় নির্দেশ করতে 'at'।" },
+
+  { q: "5. Select correct passive form: 'They will finish the work tomorrow.' → passive",
+    choices: ["The work will be finished by them tomorrow.","The work will finished by them tomorrow.","The work will be finish tomorrow.","The work is finished by them tomorrow."], correct:0,
+    explanation_bn: "Future passive গঠন: 'will be + past participle' → 'will be finished'।" },
+
+  { q: "6. Which is the correct question tag? 'You're coming, ____?'",
+    choices: ["aren't you","isn't you","don't you","didn't you"], correct:0,
+    explanation_bn: "'You're' = 'you are' → question tag হবে 'aren't you'।" },
+
+  { q: "7. Choose correct modal: 'You ____ finish this by tonight.' (advice)",
+    choices: ["must","should","might","can"], correct:1,
+    explanation_bn: "পরামর্শ দিতে 'should' বেশি উপযুক্ত; 'must' কঠোর বাধ্যবাধকতা।" },
+
+  { q: "8. Which is correct conditional type 1? 'If it ____ tomorrow, I'll stay home.'",
+    choices: ["rains","rained","will rain","rain"], correct:0,
+    explanation_bn: "Type-1 conditional এ 'if' clause এ present simple হয় — 'If it rains...'।" },
+
+  { q: "9. Reported speech: 'He said, \"I am tired.\"' → Choose correct reported form.",
+    choices: ["He said that he was tired.","He said that he is tired.","He said he tired.","He said that he will be tired."], correct:0,
+    explanation_bn: "Direct present 'am' reported speech এ backshift হয়ে 'was' হয়।" },
+
+  { q: "10. Choose correct plural: 'A child — many ____.'",
+    choices: ["childs","children","childes","childer"], correct:1,
+    explanation_bn: "'child' এর বহুবচন 'children'।" },
+
+  { q: "11. Choose correct form of verb: 'Neither of the boys ____ ready.'",
+    choices: ["are","is","were","be"], correct:1,
+    explanation_bn: "'Neither' singular ধরা হয়; তাই 'is' সঠিক।" },
+
+  { q: "12. Choose correct preposition: 'He is good ____ maths.'",
+    choices: ["in","at","on","for"], correct:1,
+    explanation_bn: "'good at' collocation — 'He is good at maths'।" },
+
+  { q: "13. Pick correct past participle: 'I have ____ my dinner.'",
+    choices: ["eat","eaten","ate","eating"], correct:1,
+    explanation_bn: "Present perfect: 'have + past participle' — 'have eaten'।" },
+
+  { q: "14. Choose the correct sentence: 'She asked me where ____.'",
+    choices: ["was he going","he was going","is he going","he is going"], correct:1,
+    explanation_bn: "Indirect question এ normal word order: subject + verb — 'he was going'।" },
+
+  { q: "15. Choose correct use of 'used to': 'I ____ live in Delhi.' (past habit)",
+    choices: ["use to","used to","am used to","was using to"], correct:1,
+    explanation_bn: "'used to' past habit বোঝায় — 'I used to live in Delhi.'।" },
+
+  { q: "16. Choose correct infinitive: 'She wants ____ a doctor.'",
+    choices: ["become","to become","becoming","becomes"], correct:1,
+    explanation_bn: "Want + to-infinitive: 'wants to become'।" },
+
+  { q: "17. Identify the adjective: 'The very tall building collapsed.' Which word is adjective?",
+    choices: ["very","tall","building","collapsed"], correct:1,
+    explanation_bn: "'tall' ভবনের গুণ বোঝায় — adjective। 'very' একটি adverb।" },
+
+  { q: "18. Choose correct comparative form: 'This book is ____ than that one.'",
+    choices: ["more interesting","interestinger","most interesting","less interest"], correct:0,
+    explanation_bn: "Comparative: 'more interesting'।" },
+
+  { q: "19. Choose correct present continuous: 'They ____ football now.'",
+    choices: ["play","are playing","plays","played"], correct:1,
+    explanation_bn: "'now' দিয়ে present continuous: 'are playing'।" },
+
+  { q: "20. Select correct negative: 'He can swim.' → negative",
+    choices: ["He can not swim.","He cannot swim.","He doesn't can swim.","He not can swim."], correct:1,
+    explanation_bn: "Modal 'can' এর negative: 'cannot' বা 'can't'।" },
+
+  { q: "21. Choose correct relative pronoun: 'The man ____ helped me is kind.'",
+    choices: ["which","who","whom","that"], correct:1,
+    explanation_bn: "মানুষের জন্য 'who' সঠিক।" },
+
+  { q: "22. Pick correct: 'I prefer tea ____ coffee.'",
+    choices: ["than","to","over","from"], correct:1,
+    explanation_bn: "'prefer A to B' হলো সঠিক structure।" },
+
+  { q: "23. Choose the correct gerund: 'She is good at ____.'",
+    choices: ["to sing","singing","sing","sang"], correct:1,
+    explanation_bn: "Preposition 'at' পরে gerund লাগে: 'good at singing'।" },
+
+  { q: "24. Which is correct sequence for reported command: 'He said, \"Open the door.\"' →",
+    choices: ["He told to open the door.","He told me to open the door.","He told open the door.","He told that open the door."], correct:1,
+    explanation_bn: "Tell someone to do — 'He told me to open the door.' (subject needed)।" },
+
+  { q: "25. Choose correct subject-verb agreement: 'The news ____ surprising.'",
+    choices: ["are","is","were","be"], correct:1,
+    explanation_bn: "'News' singular (uncountable) — 'is surprising'।" },
+
+  { q: "26. Choose correct past perfect: 'By the time I arrived, they ____.'",
+    choices: ["left","had left","have left","were leaving"], correct:1,
+    explanation_bn: "Earlier action uses past perfect: 'had left'।" },
+
+  { q: "27. Pick correct form: 'If I ____ you, I would apologize.' (second conditional)",
+    choices: ["am","were","was","will be"], correct:1,
+    explanation_bn: "Second conditional uses 'If I were you' (past subjunctive)।" },
+
+  { q: "28. Choose correct infinitive/gerund contrast: 'I remember ____ her.' (recall in mind)",
+    choices: ["meet","to meet","meeting","met"], correct:2,
+    explanation_bn: "Recall of past event uses gerund: 'remember meeting her'।" },
+
+  { q: "29. Choose correct punctuation for possessive: 'This is ____ book.' (John)",
+    choices: ["Johns","John's","John s","Johnes"], correct:1,
+    explanation_bn: "Apostrophe + s: 'John's book'।" },
+
+  { q: "30. Select correct phrasal verb: 'Please ____ the light when you leave.'",
+    choices: ["put off","put out","switch off","switch on"], correct:2,
+    explanation_bn: "'switch off' বা 'turn off' দিয়ে বাতি বন্ধ করা হয় — 'switch off'।" },
+
+  { q: "31. Choose correct verb form: 'She suggested that he ____ early.' (subjunctive)",
+    choices: ["arrives","arrive","arrived","will arrive"], correct:1,
+    explanation_bn: "After suggestion 'that' clause uses bare infinitive: 'arrive'।" },
+
+  { q: "32. Choose correct adverb: 'He speaks English ____.'",
+    choices: ["fluently","fluent","fluency","more fluent"], correct:0,
+    explanation_bn: "Verb describe করতে adverb লাগে: 'speaks fluently'।" },
+
+  { q: "33. Choose correct tag for negative statement: 'She doesn't like coffee, ____?'",
+    choices: ["does she","doesn't she","is she","did she"], correct:0,
+    explanation_bn: "Negative main clause → positive tag: 'does she'।" },
+
+  { q: "34. Choose correct conditional type 3: 'If he had studied, he ____ pass.'",
+    choices: ["would pass","would have passed","will have passed","would had passed"], correct:1,
+    explanation_bn: "Type-3: 'would have + past participle' → 'would have passed'।" },
+
+  { q: "35. Choose correct use of 'few'/'a few': 'There are ____ students in the class.' (not many)",
+    choices: ["few","a few","little","much"], correct:0,
+    explanation_bn: "'few' মানে 'not many' (নেগেটিভ ইঙ্গিত)।" },
+
+  { q: "36. Choose correct passive: 'People speak English all over the world.' →",
+    choices: ["English is spoken all over the world.","English are spoken all over the world.","English spoken all over the world.","English was spoken all over the world."], correct:0,
+    explanation_bn: "Present passive: 'is spoken'।" },
+
+  { q: "37. Choose correct connector: 'I will come ____ I finish my work.'",
+    choices: ["unless","after","until","if"], correct:1,
+    explanation_bn: "'after I finish my work' — time connector 'after'।" },
+
+  { q: "38. Choose correct form: 'He has been working here ____ 2019.'",
+    choices: ["since","for","from","during"], correct:0,
+    explanation_bn: "Start year use করে 'since'— 'since 2019'।" },
+
+  { q: "39. Choose correct plural of 'mouse':",
+    choices: ["mouses","mices","mice","mouse"], correct:2,
+    explanation_bn: "Mouse-এর বহুবচন 'mice'।" },
+
+  { q: "40. Choose correct to express obligation in past: 'He ____ go to the meeting yesterday.'",
+    choices: ["must","had to","should","ought to"], correct:1,
+    explanation_bn: "Past obligation: 'had to'।" },
+
+  { q: "41. Correct collocation: 'She made a ______ about her career.'",
+    choices: ["decision","decide","deciding","decided"], correct:0,
+    explanation_bn: "'make a decision' হলো সঠিক collocation — এখানে noun 'decision'।" },
+
+  { q: "42. Choose correct inversion after 'Only then': 'Only then ____ the truth.'",
+    choices: ["did he know","he knew","he did know","did he knew"], correct:0,
+    explanation_bn: "'Only then' fronting করলে inversion লাগে: 'Only then did he know the truth.'।" },
+
+  { q: "43. Choose correct: 'He ____ loud noises.' (habit in present — meaning he is accustomed)",
+    choices: ["is used to","used to","was used to","use to"], correct:0,
+    explanation_bn: "'is used to' মানে সে এখন উচ্চ শব্দে অভ্যস্ত — present habit/adaptation।" },
+
+  { q: "44. Choose correct article: '____ Amazon is a famous river.'",
+    choices: ["A","An","The","ø"], correct:2,
+    explanation_bn: "বিশেষ ও পরিচিত নদীর ক্ষেত্রে 'the' ব্যবহার হয় — 'the Amazon'।" },
+
+  { q: "45. Choose the correct phrase: 'I look forward ____ you.'",
+    choices: ["to meet","to meeting","meeting","to met"], correct:1,
+    explanation_bn: "'look forward to' হল prepositional phrase তাই gerund লাগে: 'to meeting'।" },
+
+  { q: "46. Choose correct reported speech: 'She said, \"I will come.\"' →",
+    choices: ["She said that she would come.","She said she will come.","She said that will come.","She said that she comes."], correct:0,
+    explanation_bn: "Future 'will' backshifts to 'would' in reported speech।" },
+
+  { q: "47. Choose correct homophone: 'He rode his ____ to work.'",
+    choices: ["horse","hoarse","coursed","horsed"], correct:0,
+    explanation_bn: "'horse' হচ্ছে সঠিক; 'hoarse' মানে কণ্ঠ হোঁকারা — ভিন্ন শব্দ।" },
+
+  { q: "48. Choose correct sentence: 'If only I ____ more money, I would travel.'",
+    choices: ["have","had","has","would have"], correct:1,
+    explanation_bn: "Wish for present unreal — use past simple 'had'." },
+
+  { q: "49. Choose correct relative clause: 'This is the house ____ I was born.'",
+    choices: ["where","which","that","in which"], correct:3,
+    explanation_bn: "স্থান নির্দেশে 'in which' বা casual 'where'। 'in which' formal ও সঠিক।" },
+
+  { q: "50. Choose correct usage: 'She recommended that he ____ a doctor.'",
+    choices: ["see","sees","saw","to see"], correct:0,
+    explanation_bn: "Recommendation → subjunctive/bare infinitive: 'that he see a doctor'।" }
+];
+
+/* -------------------------
+   App state
+   ------------------------- */
+let state = {
+  name: "",
+  surname: "",
+  index: 0,
+  score: 0,
+  answered: Array(questions.length).fill(false),
+  userAnswers: Array(questions.length).fill(null)
+};
+
+/* -------------------------
+   DOM refs
+   ------------------------- */
+const startScreen = document.getElementById('startScreen');
+const btnStart = document.getElementById('btnStart');
+const btnInstructions = document.getElementById('btnInstructions');
+const instructionsDiv = document.getElementById('instructions');
+
+const quizArea = document.getElementById('quizArea');
+const qNum = document.getElementById('qNum');
+const qText = document.getElementById('qText');
+const choicesDiv = document.getElementById('choices');
+const progressInner = document.getElementById('progressInner');
+const scoreBadge = document.getElementById('scoreBadge');
+const explainMsg = document.getElementById('explainMsg');
+const btnSubmit = document.getElementById('btnSubmit');
+const btnNext = document.getElementById('btnNext');
+
+const studentName = document.getElementById('studentName');
+const btnDownload = document.getElementById('btnDownload');
+const btnRestart = document.getElementById('btnRestart');
+
+const finalScreen = document.getElementById('finalScreen');
+const finalGreeting = document.getElementById('finalGreeting');
+const finalScore = document.getElementById('finalScore');
+const finalRemark = document.getElementById('finalRemark');
+const btnBackToStart = document.getElementById('btnBackToStart');
+
+/* -------------------------
+   Event handlers
+   ------------------------- */
+btnInstructions.addEventListener('click', () => {
+  instructionsDiv.style.display = instructionsDiv.style.display === 'none' ? 'block' : 'none';
+});
+
+btnStart.addEventListener('click', () => {
+  const fn = document.getElementById('firstName').value.trim();
+  const ln = document.getElementById('lastName').value.trim();
+  if(!fn || !ln){
+    alert("Please enter both First name and Surname.");
+    return;
+  }
+  state.name = fn; state.surname = ln;
+  studentName.textContent = `${fn} ${ln}`;
+  startScreen.style.display = 'none';
+  quizArea.style.display = 'flex';
+  renderQuestion();
+});
+
+function renderQuestion(){
+  const i = state.index;
+  const item = questions[i];
+  qNum.textContent = `Question ${i+1} of ${questions.length}`;
+  qText.textContent = item.q;
+  // progress
+  const pct = Math.round((i / questions.length) * 100);
+  progressInner.style.width = pct + "%";
+  scoreBadge.textContent = `Score: ${state.score}`;
+
+  // reset UI
+  explainMsg.style.display = 'none';
+  explainMsg.className = 'explain';
+  btnSubmit.disabled = true;
+  btnSubmit.style.display = 'inline-block';
+  btnSubmit.textContent = 'Submit';
+  btnNext.style.display = 'none';
+
+  // build choices
+  choicesDiv.innerHTML = '';
+  item.choices.forEach((ch, idx) => {
+    const id = `opt-${i}-${idx}`;
+    const label = document.createElement('label');
+    label.className = 'choice';
+    label.setAttribute('tabindex','0');
+    label.innerHTML = `<input type="radio" name="choice" id="${id}" value="${idx}" style="margin-right:8px"> <div style="font-weight:700;min-width:22px">${String.fromCharCode(65+idx)}.</div> <div style="flex:1">${ch}</div>`;
+    label.addEventListener('click', () => {
+      // select the radio
+      const input = label.querySelector('input');
+      input.checked = true;
+      btnSubmit.disabled = false;
+    });
+    label.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        const input = label.querySelector('input');
+        input.checked = true;
+        btnSubmit.disabled = false;
+      }
+    });
+    choicesDiv.appendChild(label);
+  });
+
+  // If already answered previously, preselect and show result locked
+  if(state.answered[i]){
+    const prev = state.userAnswers[i];
+    const choiceElems = choicesDiv.querySelectorAll('input[name="choice"]');
+    if(choiceElems[prev]) choiceElems[prev].checked = true;
+    // show result
+    const correctIndex = questions[i].correct;
+    if(prev === correctIndex){
+      explainMsg.textContent = "সঠিক! +2 পয়েন্ট";
+      explainMsg.classList.add('correct'); explainMsg.style.display = 'block';
+    } else {
+      explainMsg.textContent = "ভুল কারণ: " + questions[i].explanation_bn;
+      explainMsg.classList.add('wrong'); explainMsg.style.display = 'block';
+    }
+    btnSubmit.style.display = 'none';
+    btnNext.style.display = 'inline-block';
+  }
+}
+
+/* Submit logic: evaluate answer and show explanation, lock options, update score.
+   Then show Next button to proceed. */
+btnSubmit.addEventListener('click', () => {
+  const i = state.index;
+  const selected = document.querySelector('input[name="choice"]:checked');
+  if(!selected){ alert("Please select an option first."); return; }
+  const ans = parseInt(selected.value);
+  // record
+  state.userAnswers[i] = ans;
+  state.answered[i] = true;
+
+  // disable choices
+  const allInputs = document.querySelectorAll('input[name="choice"]');
+  allInputs.forEach(inp => inp.disabled = true);
+
+  const correctIndex = questions[i].correct;
+  if(ans === correctIndex){
+    state.score += 2;
+    explainMsg.textContent = "সঠিক! +2 পয়েন্ট";
+    explainMsg.className = 'explain correct';
+    explainMsg.style.display = 'block';
+  } else {
+    explainMsg.textContent = "ভুল কারণ: " + questions[i].explanation_bn;
+    explainMsg.className = 'explain wrong';
+    explainMsg.style.display = 'block';
+  }
+
+  // update score badge immediately
+  scoreBadge.textContent = `Score: ${state.score}`;
+
+  // hide submit, show Next (or Finish)
+  btnSubmit.style.display = 'none';
+  // if last question, set Next text to Finish
+  if(state.index === questions.length - 1){
+    btnNext.textContent = 'Finish';
+  } else {
+    btnNext.textContent = 'Next Question';
+  }
+  btnNext.style.display = 'inline-block';
+});
+
+/* Next button moves to next question or finishes */
+btnNext.addEventListener('click', () => {
+  if(state.index < questions.length - 1){
+    state.index += 1;
+    renderQuestion();
+    // scroll top for mobile
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    finishTest();
+  }
+});
+
+function finishTest(){
+  quizArea.style.display = 'none';
+  // show final screen in right pane
+  finalScreen.style.display = 'block';
+  finalGreeting.textContent = `${state.name} ${state.surname}, Test Complete`;
+  finalScore.textContent = `${state.score} / 100`;
+  let remark = "";
+  if(state.score === 100) remark = "Excellent! Perfect score. তুমি অসাধারণ পারফর্ম করেছো।";
+  else if(state.score >= 80) remark = "Great job! Keep practicing to get even better.";
+  else if(state.score >= 60) remark = "Good effort. Review the explanations and try again.";
+  else remark = "Keep trying — practice makes perfect. দেখো ভুলগুলো এবং আবার চেষ্টা করো।";
+  finalRemark.textContent = remark;
+
+  // prepare CSV for download (enable btn)
+  btnDownload.disabled = false;
+  // show some summary items
+  document.getElementById('finalScreen').style.display = 'block';
+}
+
+/* Download CSV */
+btnDownload.addEventListener('click', () => {
+  // make csv with one row per question including user's answer and correct and explanation
+  let csv = 'Name,Surname,TotalScore,QuestionNumber,YourAnswer,CorrectAnswer,ExplanationBN\\n';
+  questions.forEach((q, idx) => {
+    const your = (state.userAnswers[idx] !== null && state.userAnswers[idx] !== undefined) ? q.choices[state.userAnswers[idx]] : '';
+    const correct = q.choices[q.correct];
+    csv += `"${state.name}","${state.surname}",${state.score},${idx+1},"${escapeCsv(your)}","${escapeCsv(correct)}","${escapeCsv(q.explanation_bn)}"\\n`;
+  });
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${state.name}_${state.surname}_BCTC_grammar_results.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+/* Restart flow */
+btnRestart.addEventListener('click', () => {
+  location.reload();
+});
+btnBackToStart.addEventListener('click', () => {
+  // reset and go back
+  state.index = 0; state.score = 0;
+  state.answered = Array(questions.length).fill(false);
+  state.userAnswers = Array(questions.length).fill(null);
+  document.getElementById('firstName').value = state.name;
+  document.getElementById('lastName').value = state.surname;
+  finalScreen.style.display = 'none';
+  quizArea.style.display = 'flex';
+  renderQuestion();
+});
+
+/* Utility */
+function escapeCsv(s){
+  if(!s) return '';
+  return s.replace(/"/g,'""');
+}
+
+/* -------------------------
+   SERVICE WORKER (inline via Blob)
+   Registers a SW that caches the HTML page and necessary assets for offline usage.
+   ------------------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', async () => {
+    try{
+      const swCode = `
+        const CACHE_NAME = 'bctc-grammar-pwa-v1';
+        const PRECACHE_URLS = [
+          './'
+        ];
+        self.addEventListener('install', event => {
+          event.waitUntil(
+            caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS))
+          );
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', event => {
+          event.waitUntil(self.clients.claim());
+        });
+        self.addEventListener('fetch', event => {
+          // network-first for navigation, cache-first for others
+          if(event.request.mode === 'navigate'){
+            event.respondWith(
+              fetch(event.request).catch(() => caches.match('./'))
+            );
+            return;
+          }
+          event.respondWith(
+            caches.match(event.request).then(response => response || fetch(event.request).catch(()=>response))
+          );
+        });
+      `;
+      const blob = new Blob([swCode], {type: 'text/javascript'});
+      const swUrl = URL.createObjectURL(blob);
+      await navigator.serviceWorker.register(swUrl);
+      // console.log('ServiceWorker registered from blob:', swUrl);
+    } catch(err){
+      console.warn('SW registration failed:', err);
+    }
+  });
+}
+
+/* Accessibility: allow keyboard Enter to submit when a radio is selected */
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    // if quiz visible and submit visible and enabled -> trigger
+    if(quizArea.style.display !== 'none' && btnSubmit.style.display !== 'none' && !btnSubmit.disabled){
+      btnSubmit.click();
+    } else if(quizArea.style.display !== 'none' && btnSubmit.style.display === 'none' && btnNext.style.display !== 'none'){
+      // allow Enter to move to next
+      btnNext.click();
+    }
+  }
+});
+
+</script>
+</body>
+</html>
+
